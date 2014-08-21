@@ -1,0 +1,30 @@
+{
+  "name": "pg-bricks",
+  "version": "0.1.0",
+  "description": "Higher level PostgreSQL client",
+  "keywords": [
+  "postgres",
+    "pg", "postgre", "postgres", "PostgreSQL",
+    "sql", "query", "select", "insert", "update", "delete", "transaction"
+  ],
+  "author": "Alexander Schepanovski",
+  "homepage": "http://github.com/Suor/pg-bricks",
+  "license": "BSD",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Suor/pg-bricks"
+  },
+  "bugs": {
+    "url": "https://github.com/Suor/pg-bricks/issues"
+  },
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "async": "^0.9.0",
+    "debug": "~0.7.4",
+    "pg": ">=3.4.1",
+    "sql-bricks": ">=0.10.0"
+  }
+}
