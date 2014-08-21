@@ -14,8 +14,8 @@ npm install pg-bricks
 ## Usage
 
 You can use `select`, `insert`, `update` and `delete` constructors of [sql-bricks][] and
-construct your query by chaining their methods. You'll only need to execute
-`.run(callback)` finally to execute it:
+construct your query by chaining their methods. You'll only need to finally call `.run()`
+to execute it:
 
 ```js
 var db = require('pg-bricks').configure(process.env.DATABASE_URL);
@@ -31,7 +31,7 @@ As you can see, `db.sql` is a `sql-bricks` object, which you can use to escape r
 and construct where conditions.
 
 Connections are handled automatically: a connection is withheld from a pool or created
-for you when you need it and returned to pool once you are done.
+for you when you need it and returned to the pool once you are done.
 You can also manually get connection:
 
 ```js
