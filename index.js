@@ -54,6 +54,7 @@ Conf.prototype = {
     },
 
     query: function (query, params, callback) {
+        // TODO: deal with absense of params or even callback
         this.run(function (client, callback) {
             client.query(query, params, callback);
         }, callback);
