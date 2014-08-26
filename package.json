@@ -22,7 +22,6 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "async": "^0.9.0",
     "debug": "~0.7.4",
     "pg": ">=3.4.1",
     "sql-bricks": ">=0.10.0"

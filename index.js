@@ -1,7 +1,34 @@
-var async = require('async');
 var debug = require('debug')('pg-bricks');
 var sql = require('sql-bricks');
 var pg = require('pg');
+
+
+var pf = {
+    series: function () {
+        var tasks = [].slice.call(arguments);
+        var results = [];
+        var index = -1;
+        var args, callback;
+
+        function handler(err) {
+            if (err) return callback(err);
+            index++;
+            // TODO: handle no results / more than 1 result
+            if (index) results.push(arguments[1]);
+            if (index >= tasks.length) return callback(null, results);
+
+            tasks[index].apply(null, args.concat([handler]))
+        }
+
+        return function () {
+            args = [].slice.call(arguments);
+            callback = args.pop();
+
+            handler.apply(null, [null].concat(args));
+        };
+
+    }
+}
 
 
 function instrument(client) {
@@ -61,29 +88,22 @@ Conf.prototype = {
     },
 
     transaction: function (func, callback) {
-        var results;
-
         this.run(function (client, callback) {
-            async.series([
+            pf.series(
                 function (callback) {
                     client.query('begin', callback);
                 },
-                function (callback) {
-                    func(client, function () {
-                        results = arguments; // pass these out
-                        callback.apply(null, arguments)
-                    });
-                },
+                func.bind(null, client),
                 function (callback) {
                     client.query('commit', callback);
-                },
-            ], function (err) {
+                }
+            )(function (err, results) {
                 if (err) return client.query('rollback', function () {
                     callback(err);
                 });
-                callback.apply(null, results);
-            });
-        }, callback);
+                callback(null, results[1]);
+            })
+        }, callback)
     }
 }
 instrument(Conf.prototype);
