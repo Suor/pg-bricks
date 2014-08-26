@@ -4,6 +4,29 @@ var pg = require('pg');
 
 
 var pf = {
+    waterfall: function () {
+        // TODO: check tasks types?
+        var tasks = [].slice.call(arguments);
+        var index = -1;
+        var callback;
+
+        function handler(err) {
+            if (err) return callback(err);
+            index++;
+            if (index >= tasks.length) return callback.apply(null, arguments);
+
+            var args = [].slice.call(arguments, 1);
+            tasks[index].apply(null, args.concat([handler]))
+        }
+
+        return function () {
+            var args = [].slice.call(arguments);
+            callback = args.pop();
+
+            handler.apply(null, [null].concat(args));
+        };
+    },
+
     series: function () {
         var tasks = [].slice.call(arguments);
         var results = [];
@@ -31,16 +54,65 @@ var pf = {
 }
 
 
+function _expectRow(res, callback) {
+    if (res.rows.length === 0)
+        return callback(new Error('Expected a row, none found'), res);
+    if (res.rows.length > 1)
+        return callback(new Error('Expected a single row, multiple found'), res);
+    return callback(null, res)
+}
+function _expectCol(res, callback) {
+    if (res.fields.length === 0)
+        return callback(new Error('Expected a column, none found'), res);
+    if (res.fields.length > 1)
+        return callback(new Error('Expected a single column, multiple found'), res);
+    return callback(null, res)
+}
+
+var Accessors = {
+    rows: function (res, callback) {
+        callback(null, res.rows)
+    },
+    row: pf.waterfall(
+        _expectRow,
+        function (res, callback) { callback(null, res.rows[0]) }
+    ),
+    col: pf.waterfall(
+        _expectCol,
+        function (res, callback) {
+            var field = res.fields[0].name;
+            callback(null, res.rows.map(function (row) { return row[field] }));
+        }
+    ),
+    val: pf.waterfall(
+        _expectRow,
+        _expectCol,
+        function (res, callback) {
+            var field = res.fields[0].name;
+            callback(null, res.rows[0][field]);
+        }
+    )
+}
+
+
 function instrument(client) {
     if (client.update) return;
 
     ['select', 'insert', 'update', 'delete'].forEach(function (statement) {
         client[statement] = function () {
             var query = sql[statement].apply(sql, arguments);
+
             query.run = function (callback) {
                 var compiled = query.toParams();
                 return this.query(compiled.text, compiled.values, callback);
             }.bind(this);
+
+            // Bind accessors
+            query.rows = pf.waterfall(query.run, Accessors.rows);
+            query.row  = pf.waterfall(query.run, Accessors.row);
+            query.col  = pf.waterfall(query.run, Accessors.col);
+            query.val  = pf.waterfall(query.run, Accessors.val);
+
             return query;
         }
     })
