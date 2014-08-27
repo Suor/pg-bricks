@@ -14,17 +14,22 @@ npm install pg-bricks
 ## Usage
 
 You can use `select`, `insert`, `update` and `delete` constructors of [sql-bricks][] and
-construct your query by chaining their methods. You'll only need to finally call `.run()`
-to execute it:
+construct your query by chaining their methods. You'll only need to finally call `.run()` or any data accessor to execute it:
 
 ```js
 var db = require('pg-bricks').configure(process.env.DATABASE_URL);
 
-db.select().from('user').where('id', id).run(callback);
-
+// mind using db.sql to wrap now() function
 db.update('user', {last_login: db.sql('now()')}).where('id', id).run(callback);
 
+// db.sql contains various utilities to construct where conditions
 db.delete('event').where(db.sql.lt('added', new Date('2005-01-01'))).run(callback);
+
+// .rows() access selected rows directly, not wrapped into result object
+db.select().from('user').where('id', id).rows(callback);
+
+// .row() will pass newly created user to a callback
+db.insert('user', data).returning('*').row(callback);
 ```
 
 As you can see, `db.sql` is a `sql-bricks` object, which you can use to escape raw sql
@@ -51,7 +56,8 @@ db.transaction(function (client, callback) {
     async.waterfall([
         // .run is a closure, so you can pass it to other function like this:
         client.insert('user', {name: 'Mike'}).returning('id').run,
-        // res here is normal node-postgres result
+        // res here is normal node-postgres result,
+        // could used .val accessor to get id directly
         function (res, callback) {
             var id = res.rows[0].id;
             client.insert('profile', {user_id: id, ...}).run(callback);
@@ -59,6 +65,21 @@ db.transaction(function (client, callback) {
     ], callback)
 })
 ```
+
+
+## Accessors
+
+There are `.rows()`, `.row()`, `.col()` and `.val()` accessors on pg-bricks queries.
+You can use them to extract corresponding part of result conveniently.
+Also, `.row()` checks that result contains exactly one row and `.col()` checks that result
+contains exactly one column. `.val()` does both:
+
+```js
+db.select('id,name').from('user').val(function (err) {
+    // err is Error('Expected a single column, multiple found')
+})
+```
+
 
 ## Debugging
 
