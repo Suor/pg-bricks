@@ -1,0 +1,5 @@
+0.2.0
+- added .rows(), .row(), .col(), .val() accessors
+
+0.1.0
+- initial version
