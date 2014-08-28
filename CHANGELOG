@@ -1,3 +1,6 @@
+0.2.1
+- prepare for sql-tricks API break in 1.0 (Peter Rust)
+
 0.2.0
 - added .rows(), .row(), .col(), .val() accessors
 
