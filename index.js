@@ -111,7 +111,7 @@ Conf.prototype = {
 
     transaction: function (func, callback) {
         this.run(function (client, callback) {
-            pf.series(
+            pf.serial(
                 function (callback) {
                     client.query('begin', callback);
                 },
