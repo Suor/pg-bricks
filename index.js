@@ -110,20 +110,29 @@ Conf.prototype = {
     },
 
     transaction: function (func, callback) {
+        var results;
+
         this.run(function (client, callback) {
             pf.serial(
                 function (callback) {
                     client.query('begin', callback);
                 },
-                func.bind(null, client),
+                function (callback) {
+                    func(client, function () {
+                        // Capture func results
+                        results = arguments;
+                        callback.apply(null, arguments);
+                    })
+                },
                 function (callback) {
                     client.query('commit', callback);
                 }
-            )(function (err, results) {
+            )(function (err) {
                 if (err) return client.query('rollback', function () {
                     callback(err);
                 });
-                callback(null, results[1]);
+                // Resend results from func
+                callback.apply(null, results);
             })
         }, callback)
     }
