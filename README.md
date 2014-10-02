@@ -1,6 +1,7 @@
 # PostgreSQL bricks
 
-This is a PostgreSQL client, which uses [sql-bricks][] as an interface to construct queries
+This is a PostgreSQL client, which uses [PostreSQL extension][sql-bricks-postgres]
+of [sql-bricks][] as an interface to construct queries
 and handles connections and transactions for you.
 
 
@@ -33,7 +34,9 @@ db.insert('user', data).returning('*').row(callback);
 ```
 
 As you can see, `db.sql` is a `sql-bricks` object, which you can use to escape raw sql
-and construct where conditions.
+and construct where conditions. You can read about sql-bricks way of constructing
+requests in [its documentation](http://csnw.github.io/sql-bricks) and
+about PostgreSQL specific parts on [sql-bricks-postgres page][sql-bricks-postgres].
 
 Connections are handled automatically: a connection is withheld from a pool or created
 for you when you need it and returned to the pool once you are done.
@@ -92,5 +95,6 @@ DEBUG=pg-bricks node your-app.js
 to see all the queries on your screen.
 
 
+[sql-bricks-postgres]: https://www.npmjs.org/package/sql-bricks-postgres
 [sql-bricks]: https://www.npmjs.org/package/sql-bricks
 [debug]: https://www.npmjs.org/package/debug

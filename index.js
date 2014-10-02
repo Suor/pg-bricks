@@ -1,6 +1,6 @@
 var debug = require('debug')('pg-bricks');
 var pf = require('point-free');
-var sql = require('sql-bricks');
+var sql = require('sql-bricks-postgres');
 var pg = require('pg');
 
 

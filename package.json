@@ -25,6 +25,6 @@
     "debug": "~0.7.4",
     "point-free": "0.1.0",
     "pg": ">=3.4.1",
-    "sql-bricks": "0.x"
+    "sql-bricks-postgres": ">=0.2.1"
   }
 }
