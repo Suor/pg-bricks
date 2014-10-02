@@ -109,6 +109,8 @@ Conf.prototype = {
         }, callback);
     },
 
+    // TODO: add .raw(sql, params).<accessor>(...)
+
     transaction: function (func, callback) {
         var results;
 
