@@ -63,6 +63,17 @@ function instrument(client) {
             query.col  = pf.waterfall(query.run, Accessors.col);
             query.val  = pf.waterfall(query.run, Accessors.val);
 
+            // Patch insert().select()
+            if (statement == 'insert') {
+                query.select = function select() {
+                    var select = sql.insert.prototype.select.apply(this, arguments);
+                    ['run', 'rows', 'row', 'col', 'val'].forEach(function (method) {
+                        select[method] = query[method];
+                    })
+                    return select;
+                }
+            }
+
             return query;
         }
     })
