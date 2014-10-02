@@ -24,7 +24,7 @@ var db = require('pg-bricks').configure(process.env.DATABASE_URL);
 db.update('user', {last_login: db.sql('now()')}).where('id', id).run(callback);
 
 // db.sql contains various utilities to construct where conditions
-db.delete('event').where(db.sql.lt('added', new Date('2005-01-01'))).run(callback);
+db.delete('event').where(db.sql.lt('added', new Date('2005-01-01'))).run(...);
 
 // .rows() access selected rows directly, not wrapped into result object
 db.select().from('user').where('id', id).rows(callback);
@@ -60,7 +60,7 @@ db.transaction(function (client, callback) {
         // .run is a closure, so you can pass it to other function like this:
         client.insert('user', {name: 'Mike'}).returning('id').run,
         // res here is normal node-postgres result,
-        // could used .val accessor to get id directly
+        // use .val accessor to get id directly
         function (res, callback) {
             var id = res.rows[0].id;
             client.insert('profile', {user_id: id, ...}).run(callback);
