@@ -1,3 +1,8 @@
+0.3.0
+- switched to sql-bricks-postgres
+- support insert().select()
+- resend results from func wrapped with transaction
+
 0.2.2
 - updated to point-free 0.1.0
 
