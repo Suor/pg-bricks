@@ -1,3 +1,6 @@
+0.3.1
+- updated sql-bricks-postgres dep version
+
 0.3.0
 - switched to sql-bricks-postgres
 - support insert().select()
