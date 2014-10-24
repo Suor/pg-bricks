@@ -86,7 +86,7 @@ function instrument(client) {
                 message += '; [' + params.join(', ') + ']'
             }
             debug(message);
-            oldQuery.apply(client, arguments);
+            return oldQuery.apply(client, arguments);
         }
     }
 }
