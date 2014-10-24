@@ -95,6 +95,13 @@ DEBUG=pg-bricks node your-app.js
 to see all the queries on your screen.
 
 
+## TODO:
+
+- make db.query() return EventEmitter
+- add .pipe() on .query() results
+- make instrumented queries capable of streaming
+
+
 [sql-bricks-postgres]: https://www.npmjs.org/package/sql-bricks-postgres
 [sql-bricks]: https://www.npmjs.org/package/sql-bricks
 [debug]: https://www.npmjs.org/package/debug
