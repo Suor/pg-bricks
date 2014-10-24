@@ -1,3 +1,6 @@
+0.3.2
+- support streaming from client.query()
+
 0.3.1
 - updated sql-bricks-postgres dep version
 
