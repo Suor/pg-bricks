@@ -63,4 +63,41 @@ describe('pg-bricks', function () {
             }
         )(done)
     })
+
+    it('should return EventEmitter', function (done) {
+        var query = pg.select('title', 'price').from('item').where({price: 10}).run();
+
+        query.on('row', function (row) {
+            assert.deepEqual(row, {"title": "apple", "price": 10})
+        });
+        query.on('end', function () {
+            done();
+        })
+    })
+
+    it('should pipe', function (done) {
+        var query = pg.query('select title, price from item where price = 10');
+        var store = new StoreStream();
+
+        query.pipe(store);
+        query.on('end', function () {
+            assert.deepEqual(store._store, [{"title": "apple", "price": 10}])
+            done();
+        })
+    })
 })
+
+
+// Helper stream
+var stream = require('stream')
+var util   = require('util');
+
+util.inherits(StoreStream, stream.Writable);
+function StoreStream(options) {
+    stream.Writable.call(this, options);
+    this._store = [];
+}
+
+StoreStream.prototype.write = function (chunk, encoding, callback) {
+    this._store.push(chunk);
+};

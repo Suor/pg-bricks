@@ -53,8 +53,9 @@ function instrument(client) {
             var query = sql[statement].apply(sql, arguments);
 
             query.run = function (callback) {
-                var compiled = query.toParams();
-                return this.query(compiled.text, compiled.values, callback);
+                var config = query.toParams();
+                config.callback = callback;
+                return this.query(config);
             }.bind(this);
 
             // Bind accessors
@@ -78,14 +79,28 @@ function instrument(client) {
         }
     })
 
-    if (client !== Conf.prototype && debug.enabled) {
+    if (client !== Conf.prototype) {
         var oldQuery = client.query;
         client.query = function (query, params, callback) {
             var query = query instanceof pg.Query ? query : new pg.Query(query, params, callback);
             debug('%s %o', query.text, query.values);
             return oldQuery.call(client, query);
+            return instrumentQuery(oldQuery.call(client, query));
         }
     }
+}
+
+function instrumentQuery(query) {
+    query.pipe = function (dest) {
+        query.on('error', dest.emit.bind(dest, 'error'));
+        query.on('row', function (row) {
+            dest.write(row);
+        });
+        query.on('end', function (res) {
+            dest.end();
+        });
+    }
+    return query;
 }
 
 
@@ -111,10 +126,13 @@ Conf.prototype = {
     },
 
     query: function (query, params, callback) {
-        // TODO: deal with absense of params or even callback
+        var query = new pg.Query(query, params, callback);
+
         this.run(function (client, callback) {
-            client.query(query, params, callback); // Don't need to instrument this
+            client.query(query);
         }, callback);
+
+        return instrumentQuery(query);
     },
 
     // TODO: add .raw(sql, params).<accessor>(...)

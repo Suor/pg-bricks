@@ -84,6 +84,29 @@ db.select('id,name').from('user').val(function (err) {
 ```
 
 
+## Streaming
+
+Query objects returned from `.query()` and `.run()` call emit `row`, `end` and `error` events.
+This way you can process results without loading all of them into memory at once:
+
+```js
+var query = db.select('id,name').from('user').run();
+query.on('row', ...)
+query.on('end', ...)
+query.on('error', ...)
+```
+
+It also provides stream-like piping. This way you can export to CSV:
+
+```js
+function (req, res) {
+    db.select('id,name').from('user').run()
+        .pipe(csv.stringify())
+        .pipe(res);
+}
+```
+
+
 ## Debugging
 
 `pg-bricks` uses [debug][] package, so you can use:
@@ -97,9 +120,7 @@ to see all the queries on your screen.
 
 ## TODO:
 
-- make db.query() return EventEmitter
-- add .pipe() on .query() results
-- make instrumented queries capable of streaming
+- make queries with accessors capable of streaming?
 
 
 [sql-bricks-postgres]: https://www.npmjs.org/package/sql-bricks-postgres
