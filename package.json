@@ -31,12 +31,12 @@
     "test": "mocha"
   },
   "dependencies": {
-    "debug": "~0.7.4",
-    "point-free": "0.1.0",
-    "pg": ">=3.4.1",
+    "debug": "~2.1.0",
+    "point-free": "0.4.0",
+    "pg": "^3.6.2",
     "sql-bricks-postgres": ">=0.3.0"
   },
   "devDependencies": {
-    "mocha": "^1.21.4"
+    "mocha": "^2.0.1"
   }
 }
