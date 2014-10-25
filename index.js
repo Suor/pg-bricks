@@ -80,13 +80,10 @@ function instrument(client) {
 
     if (client !== Conf.prototype && debug.enabled) {
         var oldQuery = client.query;
-        client.query = function (query, params) {
-            var message = query;
-            if (typeof params != 'function') {
-                message += '; [' + params.join(', ') + ']'
-            }
-            debug(message);
-            return oldQuery.apply(client, arguments);
+        client.query = function (query, params, callback) {
+            var query = query instanceof pg.Query ? query : new pg.Query(query, params, callback);
+            debug('%s %o', query.text, query.values);
+            return oldQuery.call(client, query);
         }
     }
 }
