@@ -126,11 +126,23 @@ Conf.prototype = {
     },
 
     query: function (query, params, callback) {
-        var query = new pg.Query(query, params, callback);
+        query = new pg.Query(query, params, callback);
+        callback = query.callback;
 
-        this.run(function (client, callback) {
-            client.query(query);
-        }, callback);
+        if (callback) {
+            // Callback style
+            this.run(function (client, done) {
+                query.callback = done;
+                client.query(query);
+            }, callback);
+        } else {
+            // Streaming style
+            this.run(function (client, done) {
+                query.on('end', done);
+                query.on('error', done);
+                client.query(query);
+            }, function () {});
+        }
 
         return instrumentQuery(query);
     },
