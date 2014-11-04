@@ -38,6 +38,9 @@ and construct where conditions. You can read about sql-bricks way of constructin
 requests in [its documentation](http://csnw.github.io/sql-bricks) and
 about PostgreSQL specific parts on [sql-bricks-postgres page][sql-bricks-postgres].
 
+pg-bricks also exposes a reference to used [pg][] library via `db.pg`
+in case you want to go low level.
+
 Connections are handled automatically: a connection is withheld from a pool or created
 for you when you need it and returned to the pool once you are done.
 You can also manually get connection:
@@ -125,4 +128,5 @@ to see all the queries on your screen.
 
 [sql-bricks-postgres]: https://www.npmjs.org/package/sql-bricks-postgres
 [sql-bricks]: https://www.npmjs.org/package/sql-bricks
+[pg]: https://www.npmjs.org/package/pg
 [debug]: https://www.npmjs.org/package/debug

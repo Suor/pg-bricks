@@ -111,6 +111,7 @@ function Conf(connStr) {
 
 Conf.prototype = {
     sql: sql,
+    pg: pg,
 
     run: function (func, callback) {
         pg.connect(this._connStr, function(err, client, done) {
