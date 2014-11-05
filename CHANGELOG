@@ -1,3 +1,7 @@
+0.3.4
+- chain .pipe()
+- exposed a reference to underlying pg library
+
 0.3.3
 - support streaming from db.query()
 - added .pipe() to Query

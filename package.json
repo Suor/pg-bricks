@@ -1,6 +1,6 @@
 {
   "name": "pg-bricks",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Higher level PostgreSQL client",
   "keywords": [
     "postgres",
@@ -8,13 +8,15 @@
     "postgre",
     "postgres",
     "PostgreSQL",
+    "client",
     "sql",
     "query",
     "select",
     "insert",
     "update",
     "delete",
-    "transaction"
+    "transaction",
+    "stream"
   ],
   "author": "Alexander Schepanovski",
   "homepage": "http://github.com/Suor/pg-bricks",
