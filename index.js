@@ -99,6 +99,7 @@ function instrumentQuery(query) {
         query.on('end', function (res) {
             dest.end();
         });
+        return dest;
     }
     return query;
 }
