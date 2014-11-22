@@ -103,9 +103,8 @@ It also provides stream-like piping. This way you can export to CSV:
 
 ```js
 function (req, res) {
-    db.select('id,name').from('user').run()
-        .pipe(csv.stringify())
-        .pipe(res);
+    var query = db.select('id,name').from('user').run();
+    query.pipe(csv.stringify()).pipe(res);
 }
 ```
 
