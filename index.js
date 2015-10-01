@@ -122,7 +122,7 @@ Conf.prototype = {
 
             func(client, function () {
                 done();
-                callback.apply(null, arguments);
+                typeof callback === 'function' && callback.apply(null, arguments);
             })
         });
     },
