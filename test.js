@@ -76,25 +76,27 @@ describe('pg-bricks', function () {
         })
     })
 
-    it('should return EventEmitter', function (done) {
-        var query = pg.select('title', 'price').from('item').where({price: 10}).run();
+    describe('Streaming', function () {
+        it('should return EventEmitter', function (done) {
+            var query = pg.select('title', 'price').from('item').where({price: 10}).run();
 
-        query.on('row', function (row) {
-            assert.deepEqual(row, {"title": "apple", "price": 10})
-        });
-        query.on('end', function () {
-            done();
+            query.on('row', function (row) {
+                assert.deepEqual(row, {"title": "apple", "price": 10})
+            });
+            query.on('end', function () {
+                done();
+            })
         })
-    })
 
-    it('should pipe', function (done) {
-        var query = pg.query('select title, price from item where price = 10');
-        var store = new StoreStream();
+        it('should pipe', function (done) {
+            var query = pg.query('select title, price from item where price = 10');
+            var store = new StoreStream();
 
-        query.pipe(store);
-        query.on('end', function () {
-            assert.deepEqual(store._store, [{"title": "apple", "price": 10}])
-            done();
+            query.pipe(store);
+            query.on('end', function () {
+                assert.deepEqual(store._store, [{"title": "apple", "price": 10}])
+                done();
+            })
         })
     })
 })
