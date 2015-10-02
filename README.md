@@ -52,7 +52,7 @@ db.run(function (client, callback) {
 
     // it is however extended with sql-bricks query constructors
     client.select().from('user').where('id', id).run(callback);
-});
+}, callback);
 ```
 
 You can also wrap your connection in a transaction:
@@ -69,7 +69,7 @@ db.transaction(function (client, callback) {
             client.insert('profile', {user_id: id, ...}).run(callback);
         },
     ], callback)
-})
+}, callback)
 ```
 
 
