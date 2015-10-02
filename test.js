@@ -44,24 +44,36 @@ describe('pg-bricks', function () {
         )(done)
     })
 
-    it('should provide .rows', function (done) {
-        pf.waterfall(
-            pg.select('title', 'price').from('item').rows,
-            function (rows, callback) {
-                assert.deepEqual(rows, INITIAL);
-                done();
-            }
-        )(done)
-    })
+    describe('Accessors', function () {
+        it('should provide .rows', function (done) {
+            pf.waterfall(
+                pg.select('title', 'price').from('item').rows,
+                function (rows, callback) {
+                    assert.deepEqual(rows, INITIAL);
+                    done();
+                }
+            )(done)
+        })
 
-    it('should provide .col', function (done) {
-        pf.waterfall(
-            pg.select('title').from('item').col,
-            function (col, callback) {
-                assert.deepEqual(col, ['apple', 'orange']);
-                done();
-            }
-        )(done)
+        it('should provide .col', function (done) {
+            pf.waterfall(
+                pg.select('title').from('item').col,
+                function (col, callback) {
+                    assert.deepEqual(col, ['apple', 'orange']);
+                    done();
+                }
+            )(done)
+        })
+
+        it('should provide .val', function (done) {
+            pf.waterfall(
+                pg.select('price').from('item').where({title: 'apple'}).val,
+                function (price, callback) {
+                    assert.equal(price, 10);
+                    done();
+                }
+            )(done)
+        })
     })
 
     it('should return EventEmitter', function (done) {
