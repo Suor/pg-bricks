@@ -15,9 +15,9 @@ describe('pg-bricks', function () {
         var pgsu = require('./index').configure('postgres://postgres@localhost/postgres');
 
         pf.serial(
-            pgsu.query.bind(pgsu, 'drop database if exists pg_bricks', []),
-            pgsu.query.bind(pgsu, 'create database pg_bricks', []),
-            pg.query.bind(pg, 'create table item (id serial, title text, price int)', []),
+            pgsu.raw('drop database if exists pg_bricks').run,
+            pgsu.raw('create database pg_bricks').run,
+            pg.raw('create table item (id serial, title text, price int)').run,
             pg.insert('item', INITIAL).run
         )(function (err, res) {
             done(err);
@@ -26,7 +26,7 @@ describe('pg-bricks', function () {
 
 
     it('should run query', function (done) {
-        pg.query('select 42 as x', [], function (err, res) {
+        pg.raw('select 42 as x').run(function (err, res) {
             assert.ifError(err);
             assert.equal(res.command, 'SELECT');
             assert.deepEqual(res.rows, [{x: 42}]);
@@ -74,6 +74,16 @@ describe('pg-bricks', function () {
                 }
             )(done)
         })
+
+        it('should provide .val on .raw', function (done) {
+            pf.waterfall(
+                pg.raw('select price from item where title = $1', ['apple']).val,
+                function (price, callback) {
+                    assert.equal(price, 10);
+                    done();
+                }
+            )(done)
+        })
     })
 
     describe('Streaming', function () {
@@ -89,7 +99,7 @@ describe('pg-bricks', function () {
         })
 
         it('should pipe', function (done) {
-            var query = pg.query('select title, price from item where price = 10');
+            var query = pg.raw('select title, price from item where price = 10').run();
             var store = new StoreStream();
 
             query.pipe(store);

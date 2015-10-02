@@ -45,12 +45,23 @@ var Accessors = {
 }
 
 
+function RawSQL(text, values) {
+    return {
+        toParams: function () {
+            return {text: text, values: values || []}
+        }
+    }
+}
+
+
 function instrument(client) {
     if (client.update) return;
 
-    ['select', 'insert', 'update', 'delete'].forEach(function (statement) {
+    ['select', 'insert', 'update', 'delete', 'raw'].forEach(function (statement) {
         client[statement] = function () {
-            var query = sql[statement].apply(sql, arguments);
+            var query = statement == 'raw'
+                 ? RawSQL.apply(this, arguments)
+                 : sql[statement].apply(sql, arguments);
 
             query.run = function (callback) {
                 var config = query.toParams();
@@ -148,8 +159,6 @@ Conf.prototype = {
 
         return instrumentQuery(query);
     },
-
-    // TODO: add .raw(sql, params).<accessor>(...)
 
     transaction: function (func, callback) {
         var results;
