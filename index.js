@@ -94,7 +94,6 @@ function instrument(client) {
         client.query = function (query, params, callback) {
             var query = query instanceof pg.Query ? query : new pg.Query(query, params, callback);
             debug('%s %o', query.text, query.values);
-            return oldQuery.call(client, query);
             return instrumentQuery(oldQuery.call(client, query));
         }
     }

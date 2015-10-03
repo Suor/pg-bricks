@@ -108,6 +108,14 @@ describe('pg-bricks', function () {
                 done();
             })
         })
+
+        it('should pipe from client', function (done) {
+            pg.run(function (client, callback) {
+                var query = client.raw('select title, price from item where price = 10').run();
+                assert.equal(typeof query.pipe, 'function');
+                callback();
+            }, done)
+        })
     })
 })
 
