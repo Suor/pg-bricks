@@ -11,6 +11,7 @@ function _expectRow(res, callback) {
         return callback(new Error('Expected a single row, multiple found'), res);
     return callback(null, res)
 }
+
 function _expectCol(res, callback) {
     if (res.fields.length === 0)
         return callback(new Error('Expected a column, none found'), res);
@@ -57,6 +58,7 @@ function RawSQL(text, values) {
 function instrument(client) {
     if (client.update) return;
 
+    // Monkey patch statement constructors to pg client and make them runnable
     ['select', 'insert', 'update', 'delete', 'raw'].forEach(function (statement) {
         client[statement] = function () {
             var brick = statement == 'raw' ? RawSQL.apply(this, arguments)
@@ -186,6 +188,7 @@ Conf.prototype = {
         }, callback)
     }
 }
+// Add statement constructors to Conf object
 instrument(Conf.prototype);
 
 
