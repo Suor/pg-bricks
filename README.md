@@ -34,12 +34,22 @@ db.insert('user', data).returning('*').row(callback);
 ```
 
 As you can see, `db.sql` is a `sql-bricks` object, which you can use to escape raw sql
-and construct where conditions. You can read about sql-bricks way of constructing
+fragments. You can read about sql-bricks way of constructing
 requests in [its documentation](http://csnw.github.io/sql-bricks) and
 about PostgreSQL specific parts on [sql-bricks-postgres page][sql-bricks-postgres].
 
 pg-bricks also exposes a reference to used [pg][] library via `db.pg`
 in case you want to go low level.
+
+When you need to perform something custom you can resolve to raw sql queries:
+
+```js
+// use .raw() for raw sql and .val() to get single value
+db.raw('select pg_datatable_size($1)', [tableName]).val(callback);
+```
+
+
+## Connections and transactions
 
 Connections are handled automatically: a connection is withheld from a pool or created
 for you when you need it and returned to the pool once you are done.
@@ -48,14 +58,15 @@ You can also manually get connection:
 ```js
 db.run(function (client, callback) {
     // client is a node-postgres client object
-    client.query("select * from user where id = $1", [id], callback);
-
     // it is however extended with sql-bricks query constructors
     client.select().from('user').where('id', id).run(callback);
+
+    // you also get .raw()
+    client.raw("select * from user where id = $1", [id]).run(callback);
 }, callback);
 ```
 
-You can also wrap your connection in a transaction:
+You can easily wrap your connection in a transaction:
 
 ```js
 db.transaction(function (client, callback) {
@@ -81,7 +92,7 @@ Also, `.row()` checks that result contains exactly one row and `.col()` checks t
 contains exactly one column. `.val()` does both:
 
 ```js
-db.select('id,name').from('user').val(function (err) {
+db.select('id, name').from('user').val(function (err) {
     // err is Error('Expected a single column, multiple found')
 })
 ```
@@ -89,11 +100,11 @@ db.select('id,name').from('user').val(function (err) {
 
 ## Streaming
 
-Query objects returned from `.query()` and `.run()` call emit `row`, `end` and `error` events.
+Query objects returned from `.run()` call emit `row`, `end` and `error` events.
 This way you can process results without loading all of them into memory at once:
 
 ```js
-var query = db.select('id,name').from('user').run();
+var query = db.select('id, name').from('user').run();
 query.on('row', ...)
 query.on('end', ...)
 query.on('error', ...)
@@ -103,7 +114,7 @@ It also provides stream-like piping. This way you can export to CSV:
 
 ```js
 function (req, res) {
-    var query = db.select('id,name').from('user').run();
+    var query = db.raw('select id, name from user').run();
     query.pipe(csv.stringify()).pipe(res);
 }
 ```
