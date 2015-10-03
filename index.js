@@ -59,34 +59,33 @@ function instrument(client) {
 
     ['select', 'insert', 'update', 'delete', 'raw'].forEach(function (statement) {
         client[statement] = function () {
-            var query = statement == 'raw'
-                 ? RawSQL.apply(this, arguments)
-                 : sql[statement].apply(sql, arguments);
+            var brick = statement == 'raw' ? RawSQL.apply(this, arguments)
+                                           : sql[statement].apply(sql, arguments);
 
-            query.run = function (callback) {
-                var config = query.toParams();
+            brick.run = function (callback) {
+                var config = brick.toParams();
                 config.callback = callback;
                 return this.query(config);
             }.bind(this);
 
             // Bind accessors
-            query.rows = pf.waterfall(query.run, Accessors.rows);
-            query.row  = pf.waterfall(query.run, Accessors.row);
-            query.col  = pf.waterfall(query.run, Accessors.col);
-            query.val  = pf.waterfall(query.run, Accessors.val);
+            brick.rows = pf.waterfall(brick.run, Accessors.rows);
+            brick.row  = pf.waterfall(brick.run, Accessors.row);
+            brick.col  = pf.waterfall(brick.run, Accessors.col);
+            brick.val  = pf.waterfall(brick.run, Accessors.val);
 
             // Patch insert().select()
             if (statement == 'insert') {
-                query.select = function select() {
+                brick.select = function select() {
                     var select = sql.insert.prototype.select.apply(this, arguments);
                     ['run', 'rows', 'row', 'col', 'val'].forEach(function (method) {
-                        select[method] = query[method];
+                        select[method] = brick[method];
                     })
                     return select;
                 }
             }
 
-            return query;
+            return brick;
         }
     })
 
