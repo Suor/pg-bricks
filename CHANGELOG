@@ -1,3 +1,8 @@
+0.4.0
+- updated pg to 4.x
+- added .raw()
+- fixed piping from client
+
 0.3.4
 - chain .pipe()
 - exposed a reference to underlying pg library
