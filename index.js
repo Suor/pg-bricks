@@ -2,6 +2,11 @@ var debug = require('debug')('pg-bricks');
 var pf = require('point-free');
 var sql = require('sql-bricks-postgres');
 var pg = require('pg');
+try {
+    pg.native.Query = pg.Query;
+    pg = pg.native;
+} catch (e) {
+}
 
 
 function _expectRow(res, callback) {
@@ -153,7 +158,14 @@ Conf.prototype = {
             this.run(function (client, done) {
                 query.on('end', done);
                 query.on('error', done);
-                client.query(query);
+                var q = client.query(query);
+                // HACK: when using pg-native, q will be NativeQuery,
+                //       so we need to route all events.
+                if (q !== query) {
+                    q.on('row', query.emit.bind(query, 'row'));
+                    q.on('end', query.emit.bind(query, 'end'));
+                    q.on('error', query.emit.bind(query, 'error'));
+                }
             }, function () {});
         }
 
