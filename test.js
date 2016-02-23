@@ -112,8 +112,12 @@ describe('pg-bricks', function () {
         it('should pipe from client', function (done) {
             pg.run(function (client, callback) {
                 var query = client.raw('select title, price from item where price = 10').run();
-                assert.equal(typeof query.pipe, 'function');
-                callback();
+                var store = new StoreStream();
+                query.pipe(store);
+                query.on('end', function () {
+                    assert.deepEqual(store._store, [{"title": "apple", "price": 10}])
+                    callback();
+                })
             }, done)
         })
     })
