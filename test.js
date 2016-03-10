@@ -1,6 +1,9 @@
 var assert = require('assert');
 var pf = require('point-free');
 var pg = require('./index').configure('postgres://postgres@localhost/pg_bricks');
+if (process.env.PGBRICKS_TEST_NATIVE) {
+    pg = pg.native;
+}
 
 
 var INITIAL = [

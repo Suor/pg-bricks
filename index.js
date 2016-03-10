@@ -2,11 +2,8 @@ var debug = require('debug')('pg-bricks');
 var pf = require('point-free');
 var sql = require('sql-bricks-postgres');
 var pg = require('pg');
-try {
-    pg.native.Query = pg.Query;
-    pg = pg.native;
-} catch (e) {
-}
+// HACK: when using NODE_PG_FORCE_NATIVE pg.Query is inaccessible
+var Query = pg.Query || require('pg/lib/query');
 
 
 function _expectRow(res, callback) {
@@ -99,7 +96,7 @@ function instrument(client) {
     if (client !== Conf.prototype) {
         var oldQuery = client.query;
         client.query = function (query, params, callback) {
-            var query = query instanceof pg.Query ? query : new pg.Query(query, params, callback);
+            var query = query instanceof Query ? query : new Query(query, params, callback);
             debug('%s %o', query.text, query.values);
             return instrumentQuery(oldQuery.call(client, query));
         }
@@ -122,16 +119,21 @@ function instrumentQuery(query) {
 
 
 // A Conf object
-function Conf(connStr) {
+function Conf(connStr, _pg) {
     this._connStr = connStr;
+    this._pg = _pg || pg;
 }
 
 Conf.prototype = {
     sql: sql,
     pg: pg,
 
+    get native () {
+        return new Conf(this._connStr, pg.native);
+    },
+
     run: function (func, callback) {
-        pg.connect(this._connStr, function(err, client, done) {
+        this._pg.connect(this._connStr, function(err, client, done) {
             if (err) return callback(err);
 
             instrument(client);
@@ -144,7 +146,7 @@ Conf.prototype = {
     },
 
     query: function (query, params, callback) {
-        query = new pg.Query(query, params, callback);
+        query = new Query(query, params, callback);
         callback = query.callback;
 
         if (callback) {

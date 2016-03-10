@@ -131,6 +131,24 @@ DEBUG=pg-bricks node your-app.js
 to see all the queries on your screen.
 
 
+## Native bindings
+
+You can use native bindings similar to the way you use it with `pg`:
+
+```js
+var db = require('pg-bricks').configure(process.env.DATABASE_URL);
+db = db.native;
+
+// ... use db as usual
+```
+
+`NODE_PG_FORCE_NATIVE` environment variable will also work as expected:
+
+```bash
+NODE_PG_FORCE_NATIVE=1 node your_code.js
+```
+
+
 ## TODO:
 
 - make queries with accessors capable of streaming?

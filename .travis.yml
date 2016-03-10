@@ -1,3 +1,10 @@
 language: node_js
 node_js:
   - "0.10"
+  - "4.0"
+before_script:
+  - npm i pg-native
+script:
+  - npm test
+  - PGBRICKS_TEST_NATIVE=1 npm test
+  - NODE_PG_FORCE_NATIVE=1 npm test
