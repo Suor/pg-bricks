@@ -20,7 +20,7 @@
   ],
   "author": "Alexander Schepanovski",
   "homepage": "http://github.com/Suor/pg-bricks",
-  "license": "BSD",
+  "license": "BSD-2-Clause",
   "repository": {
     "type": "git",
     "url": "https://github.com/Suor/pg-bricks"
