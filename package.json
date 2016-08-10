@@ -33,9 +33,9 @@
     "test": "mocha"
   },
   "dependencies": {
-    "debug": "~2.1.0",
+    "debug": "~2.2.0",
     "point-free": "0.7.0",
-    "pg": "^4.0",
+    "pg": "^6.0",
     "sql-bricks-postgres": ">=0.3.0"
   },
   "devDependencies": {
