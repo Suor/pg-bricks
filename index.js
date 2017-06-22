@@ -1,6 +1,7 @@
 var debug = require('debug')('pg-bricks');
 var pf = require('point-free');
 var sql = require('sql-bricks-postgres');
+var url = require('url');
 var pg = require('pg');
 // HACK: when using NODE_PG_FORCE_NATIVE pg.Query is inaccessible
 var Query = pg.Query || require('pg/lib/query');
@@ -122,6 +123,20 @@ function instrumentQuery(query) {
 function Conf(connStr, _pg) {
     this._connStr = connStr;
     this._pg = _pg || pg;
+
+    var params = url.parse(connStr);
+    var auth = params.auth.split(':');
+
+    this._config = {
+        user: auth[0],
+        password: auth[1],
+        host: params.hostname,
+        port: params.port,
+        database: params.pathname.split('/')[1],
+        ssl: true
+    };
+
+    this._pool = new this._pg.Pool(this._config);
 }
 
 Conf.prototype = {
@@ -133,7 +148,7 @@ Conf.prototype = {
     },
 
     run: function (func, callback) {
-        this._pg.connect(this._connStr, function(err, client, done) {
+        this._pool.connect(function(err, client, done) {
             if (err) return callback(err);
 
             instrument(client);
