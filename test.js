@@ -37,6 +37,16 @@ describe('pg-bricks', function () {
         })
     })
 
+    it('should run query from client', function (done) {
+        pg.run(function (client, callback) {
+            client.raw('select 42 as x').run(function (err, res) {
+                assert.ifError(err);
+                assert.deepEqual(res.rows, [{x: 42}]);
+                done();
+            })
+        }, done)
+    })
+
     it('should support sql-bricks', function (done) {
         pf.waterfall(
             pg.select('title', 'price').from('item').run,
