@@ -89,6 +89,31 @@ describe('pg-bricks', function () {
         })
     })
 
+    describe('Promises', function () {
+        it('should return promise', function () {
+            var res = pg.raw('select 42 as x').run();
+            assert(res instanceof Promise);
+        })
+
+        it('should work with raw', function () {
+            return pg.raw('select 42 as x').run().then(function (data) {
+                assert.deepEqual(data.rows, [{x: 42}])
+            })
+        })
+
+        it('should support sql-bricks', function () {
+            return pg.raw('select 42 as x').run().then(function (data) {
+                assert.deepEqual(data.rows, [{x: 42}])
+            })
+        })
+
+        it('should work with accessors', function () {
+            pg.select('title').from('item').col().then(function (col) {
+                assert.deepEqual(col, ['apple', 'orange']);
+            })
+        })
+    })
+
     describe('Streaming', function () {
         it('should return EventEmitter', function (done) {
             var query = pg.select('title', 'price').from('item').where({price: 10}).run();

@@ -56,10 +56,20 @@ function RawSQL(text, values) {
     }
 }
 
+function toOptionalPromise(func) {
+    return function (callback) {
+        if (callback) return func(callback);
+
+        return new Promise(function (resolve, reject) {
+            func(function (err, res) {
+                if (err) reject(err)
+                else resolve(res)
+            })
+        })
+    }
+}
 
 function instrument(client) {
-    if (client.update) return;
-
     // Monkey patch statement constructors to pg client and make them runnable
     ['select', 'insert', 'update', 'delete', 'raw'].forEach(function (statement) {
         client[statement] = function () {
@@ -72,10 +82,10 @@ function instrument(client) {
             }.bind(this);
 
             // Bind accessors
-            brick.rows = pf.waterfall(brick.run, Accessors.rows);
-            brick.row  = pf.waterfall(brick.run, Accessors.row);
-            brick.col  = pf.waterfall(brick.run, Accessors.col);
-            brick.val  = pf.waterfall(brick.run, Accessors.val);
+            brick.rows = toOptionalPromise(pf.waterfall(brick.run, Accessors.rows));
+            brick.row  = toOptionalPromise(pf.waterfall(brick.run, Accessors.row));
+            brick.col  = toOptionalPromise(pf.waterfall(brick.run, Accessors.col));
+            brick.val  = toOptionalPromise(pf.waterfall(brick.run, Accessors.val));
 
             // Patch insert().select()
             if (statement == 'insert') {
