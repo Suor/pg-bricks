@@ -2,8 +2,6 @@ var debug = require('debug')('pg-bricks');
 var pf = require('point-free');
 var sql = require('sql-bricks-postgres');
 var pg = require('pg');
-// HACK: when using NODE_PG_FORCE_NATIVE pg.Query is inaccessible
-var Query = pg.Query || require('pg/lib/query');
 
 
 function _expectRow(res, callback) {
@@ -143,7 +141,7 @@ Conf.prototype = {
     pg: pg,
 
     get native () {
-        return new Conf(this._connStr, pg.native);
+        return new Conf(this._config, pg.native);
     },
 
     run: function (func, callback) {

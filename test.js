@@ -125,7 +125,8 @@ describe('pg-bricks', function () {
         })
     })
 
-    describe('Streaming', function () {
+    var usingNative = process.env.PGBRICKS_TEST_NATIVE || process.env.NODE_PG_FORCE_NATIVE;
+    (usingNative ? describe.skip : describe)('Streaming', function () {
         it('should return EventEmitter', function (done) {
             var query = pg.select('title', 'price').from('item').where({price: 10}).stream();
 

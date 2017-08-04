@@ -151,6 +151,8 @@ db = db.native;
 NODE_PG_FORCE_NATIVE=1 node your_code.js
 ```
 
+Note that streaming won't work with native bindings.
+
 
 ## TODO:
 
