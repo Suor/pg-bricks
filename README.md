@@ -104,22 +104,21 @@ db.select('id, name').from('user').val(function (err) {
 
 ## Streaming
 
-Query objects returned from `.run()` call emit `row`, `end` and `error` events.
-This way you can process results without loading all of them into memory at once:
+To get a stream just call `.stream()` method on a brick:
 
 ```js
-var query = db.select('id, name').from('user').run();
-query.on('row', ...)
-query.on('end', ...)
-query.on('error', ...)
+var stream = db.select('id, name').from('user').stream();
+stream.on('data', ...)
+stream.on('end', ...)
+stream.on('error', ...)
 ```
 
-It also provides stream-like piping. This way you can export to CSV:
+Piping also works, e.g. this way you can export to CSV:
 
 ```js
 function (req, res) {
-    var query = db.raw('select id, name from user').run();
-    query.pipe(csv.stringify()).pipe(res);
+    var stream = db.raw('select id, name from user').stream();
+    stream.pipe(csv.stringify()).pipe(res);
 }
 ```
 
