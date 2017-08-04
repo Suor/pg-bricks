@@ -48,6 +48,10 @@ When you need to perform something custom you can resolve to raw sql queries:
 db.raw('select pg_datatable_size($1)', [tableName]).val(callback);
 ```
 
+## Promises
+
+...
+
 
 ## Connections and transactions
 
