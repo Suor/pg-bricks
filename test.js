@@ -108,8 +108,9 @@ describe('pg-bricks', function () {
         })
 
         it('should work with accessors', function () {
-            pg.select('title').from('item').col().then(function (col) {
-                assert.deepEqual(col, ['apple', 'orange']);
+            return pg.select('title,price').from('item').where({title: 'apple'}).row()
+            .then(function (row) {
+                assert.deepEqual(row, {title: 'apple', price: 10});
             })
         })
     })
