@@ -27,7 +27,7 @@ db.update('user', {last_login: db.sql('now()')}).where('id', id).run(callback);
 db.delete('event').where(db.sql.lt('added', new Date('2005-01-01'))).run(...);
 
 // .rows() access selected rows directly, not wrapped into result object
-db.select().from('user').where('id', id).rows(callback);
+db.select().from('user').where({name: userName}).rows(callback);
 
 // .row() will pass newly created user to a callback
 db.insert('user', data).returning('*').row(callback);
