@@ -68,8 +68,7 @@ function instrument(client) {
 
             brick.run = function (callback) {
                 var config = brick.toParams();
-                config.callback = callback;
-                return this.query(config);
+                return this.query(config.text, config.values, callback);
             }.bind(this);
 
             // Bind accessors
@@ -92,15 +91,6 @@ function instrument(client) {
             return brick;
         }
     })
-
-    if (client !== Conf.prototype) {
-        var oldQuery = client.query;
-        client.query = function (query, params, callback) {
-            var query = query instanceof Query ? query : new Query(query, params, callback);
-            debug('%s %o', query.text, query.values);
-            return instrumentQuery(oldQuery.call(client, query));
-        }
-    }
 }
 
 function instrumentQuery(query) {
@@ -119,9 +109,11 @@ function instrumentQuery(query) {
 
 
 // A Conf object
-function Conf(connStr, _pg) {
-    this._connStr = connStr;
+function Conf(config, _pg) {
+    if (typeof config === 'string') config = {connectionString: config};
+    this._config = config;
     this._pg = _pg || pg;
+    this._pool = this._pg.Pool(config);
 }
 
 Conf.prototype = {
@@ -132,46 +124,8 @@ Conf.prototype = {
         return new Conf(this._connStr, pg.native);
     },
 
-    run: function (func, callback) {
-        this._pg.connect(this._connStr, function(err, client, done) {
-            if (err) return callback(err);
-
-            instrument(client);
-
-            func(client, function () {
-                done();
-                callback.apply(null, arguments);
-            })
-        });
-    },
-
     query: function (query, params, callback) {
-        query = new Query(query, params, callback);
-        callback = query.callback;
-
-        if (callback) {
-            // Callback style
-            this.run(function (client, done) {
-                query.callback = done;
-                client.query(query);
-            }, callback);
-        } else {
-            // Streaming style
-            this.run(function (client, done) {
-                query.on('end', done);
-                query.on('error', done);
-                var q = client.query(query);
-                // HACK: when using pg-native, q will be NativeQuery,
-                //       so we need to route all events.
-                if (q !== query) {
-                    q.on('row', query.emit.bind(query, 'row'));
-                    q.on('end', query.emit.bind(query, 'end'));
-                    q.on('error', query.emit.bind(query, 'error'));
-                }
-            }, function () {});
-        }
-
-        return instrumentQuery(query);
+        return this._pool.query(query, params, callback)
     },
 
     transaction: function (func, callback) {
@@ -209,6 +163,6 @@ instrument(Conf.prototype);
 // Exports
 exports.sql = sql;
 
-exports.configure = function (connStr) {
-    return new Conf(connStr)
+exports.configure = function (config) {
+    return new Conf(config)
 }
