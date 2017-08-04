@@ -78,8 +78,8 @@ function instrument(client) {
 
             brick.run = function (callback) {
                 var config = brick.toParams();
-                return this.query(config.text, config.values, callback);
                 debug('%s %o', config.text, config.values);
+                return this.query(config, callback)
             }.bind(this);
 
             // Bind accessors
@@ -99,23 +99,34 @@ function instrument(client) {
                 }
             }
 
+            brick.stream = function () {
+                var QueryStream = require('pg-query-stream');
+                var config = brick.toParams();
+                debug('%s %o', config.text, config.values);
+                if (!this.run) {
+                    return this.query(new QueryStream(config.text, config.values))
+                }
+
+                // TODO: get rid of PassThrough stream once the issue below is fixed,
+                //       see https://github.com/brianc/node-pg-query-stream/issues/28
+                var PassThrough = require('stream').PassThrough;
+                var fakeStream = new PassThrough({objectMode: true});
+
+                this.run(function (client, callback) {
+                    var stream = client.query(new QueryStream(config.text, config.values));
+                    stream.pipe(fakeStream);
+                    stream.on('error', callback);
+                    stream.on('end', function () {callback()});
+                }, function (err) {
+                    if (err) fakeStream.emit('error', err);
+                })
+
+                return fakeStream;
+            }.bind(this);
+
             return brick;
         }
     })
-}
-
-function instrumentQuery(query) {
-    query.pipe = function (dest) {
-        query.on('error', dest.emit.bind(dest, 'error'));
-        query.on('row', function (row) {
-            dest.write(row);
-        });
-        query.on('end', function (res) {
-            dest.end();
-        });
-        return dest;
-    }
-    return query;
 }
 
 
@@ -133,6 +144,19 @@ Conf.prototype = {
 
     get native () {
         return new Conf(this._connStr, pg.native);
+    },
+
+    run: function (func, callback) {
+        this._pool.connect(function(err, client, done) {
+            if (err) return callback(err);
+
+            instrument(client);
+
+            func(client, function () {
+                done();
+                callback.apply(null, arguments);
+            })
+        });
     },
 
     query: function (query, params, callback) {

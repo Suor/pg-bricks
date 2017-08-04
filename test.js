@@ -127,9 +127,10 @@ describe('pg-bricks', function () {
 
     describe('Streaming', function () {
         it('should return EventEmitter', function (done) {
-            var query = pg.select('title', 'price').from('item').where({price: 10}).run();
+            var query = pg.select('title', 'price').from('item').where({price: 10}).stream();
 
-            query.on('row', function (row) {
+            query.on('error', done);
+            query.on('data', function (row) {
                 assert.deepEqual(row, {"title": "apple", "price": 10})
             });
             query.on('end', function () {
@@ -137,26 +138,20 @@ describe('pg-bricks', function () {
             })
         })
 
-        it('should pipe', function (done) {
-            var query = pg.raw('select title, price from item where price = 10').run();
-            var store = new StoreStream();
-
-            query.pipe(store);
-            query.on('end', function () {
-                assert.deepEqual(store._store, [{"title": "apple", "price": 10}])
-                done();
+        it('should pipe', function () {
+            var query = pg.raw('select title, price from item where price = $1', [10]).stream();
+            return slurp(query).then(function (data) {
+                assert.deepEqual(data, [{"title": "apple", "price": 10}])
             })
         })
 
         it('should pipe from client', function (done) {
             pg.run(function (client, callback) {
-                var query = client.raw('select title, price from item where price = 10').run();
-                var store = new StoreStream();
-                query.pipe(store);
-                query.on('end', function () {
-                    assert.deepEqual(store._store, [{"title": "apple", "price": 10}])
-                    callback();
-                })
+                var query = client.raw('select title, price from item where price = 10').stream();
+                slurp(query).then(function (data) {
+                    assert.deepEqual(data, [{"title": "apple", "price": 10}])
+                    done();
+                }).catch(done);
             }, done)
         })
     })
@@ -176,3 +171,13 @@ function StoreStream(options) {
 StoreStream.prototype.write = function (chunk, encoding, callback) {
     this._store.push(chunk);
 };
+
+function slurp(stream) {
+    var store = new StoreStream();
+    stream.pipe(store);
+    return new Promise(function (resolve, reject) {
+        stream.on('error', reject)
+        stream.on('end', function () {resolve(store._store)})
+        // stream.on('finish', function () {resolve(store._store)})
+    })
+}
