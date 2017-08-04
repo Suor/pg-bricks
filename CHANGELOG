@@ -1,6 +1,6 @@
 0.5.0
 - support native bindings
-- updateed dependencies: pg to 6.0, debug to 2.2.0
+- updated dependencies: pg to 6.0, debug to 2.2.0
 - dropped Node.js 0.10 support
 
 0.4.0
