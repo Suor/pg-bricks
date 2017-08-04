@@ -79,6 +79,7 @@ function instrument(client) {
             brick.run = function (callback) {
                 var config = brick.toParams();
                 return this.query(config.text, config.values, callback);
+                debug('%s %o', config.text, config.values);
             }.bind(this);
 
             // Bind accessors
