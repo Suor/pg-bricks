@@ -159,7 +159,7 @@ describe('pg-bricks', function () {
             pg.transaction(function (client, callback) {
                 pf.serial(
                     client.update('item', {price: 42}).where('title', 'apple').run,
-                    function (callback) { callback(new Error('Intended rollback')) },
+                    function (callback) { callback(new Error('Intended rollback')) }
                 )(callback)
             }, function (err) {
                 assert.equal(err.message, 'Intended rollback')
@@ -225,7 +225,7 @@ describe('pg-bricks', function () {
         it('should error out', function (done) {
             var stream = pg.raw('select no_col from item').stream();
             stream.on('error', function (err) {
-                assert.equal(err.routine, 'errorMissingColumn')
+                assert.equal(err.message, 'column "no_col" does not exist')
                 done()
             })
             stream.on('data', function () {
