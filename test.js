@@ -170,6 +170,25 @@ describe('pg-bricks', function () {
                     })
             })
         })
+
+        it('should work with promises', function () {
+            var idle = pg._pool.idleCount;
+            return pg.run(function (client) {
+                assert.equal(pg._pool.idleCount, idle - 1);
+                return client.raw('select 42 as x').val();
+            }).then(function (val) {
+                assert.equal(val, 42);
+                assert.equal(pg._pool.idleCount, idle);
+            })
+        })
+
+        it('should transact with promises', function () {
+            return pg.transaction(function (client) {
+                return client.raw('select 42 as x').val();
+            }).then(function (val) {
+                assert.equal(val, 42);
+            })
+        })
     })
 
     var usingNative = process.env.PGBRICKS_TEST_NATIVE || process.env.NODE_PG_FORCE_NATIVE;

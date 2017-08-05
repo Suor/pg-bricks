@@ -68,6 +68,26 @@ function optionalPromisify(func) {
     }
 }
 
+function promisify(callback) {
+    if (callback) return {callback: callback, result: undefined}
+
+    var rej, res;
+    var cb = function (err, client) {
+        err ? rej(err) : res(client)
+    }
+    var result = new Promise(function (resolve, reject) {
+        res = resolve
+        rej = reject
+    })
+    return {callback: cb, result: result}
+}
+
+function callbackify(func) {
+    return function (client, callback) {
+        func(client).then(function (data) {callback(null, data)}).catch(callback);
+    }
+}
+
 
 function instrument(client) {
     // Monkey patch statement constructors to pg client and make them runnable
@@ -147,16 +167,21 @@ Conf.prototype = {
     },
 
     run: function (func, callback) {
+        var response = promisify(callback);
+        var func = callback ? func : callbackify(func);
+
         this._pool.connect(function(err, client, done) {
-            if (err) return callback(err);
+            if (err) return response.callback(err);
 
             instrument(client);
 
             func(client, function () {
                 done();
-                callback.apply(null, arguments);
+                response.callback.apply(null, arguments);
             })
         });
+
+        return response.result;
     },
 
     query: function (query, params, callback) {
@@ -164,6 +189,8 @@ Conf.prototype = {
     },
 
     transaction: function (func, callback) {
+        var response = promisify(callback);
+        var func = callback ? func : callbackify(func);
         var results;
 
         this.run(function (client, callback) {
@@ -188,8 +215,10 @@ Conf.prototype = {
                 // Resend results from func
                 callback.apply(null, results);
             })
-        }, callback)
-    }
+        }, response.callback);
+
+        return response.result;
+    },
 }
 // Add statement constructors to Conf object
 instrument(Conf.prototype);
