@@ -125,6 +125,53 @@ describe('pg-bricks', function () {
         })
     })
 
+    describe('Enclosures', function () {
+        it('should manage client', function (done) {
+            var idle = pg._pool.idleCount;
+            pg.run(function (client, callback) {
+                assert.equal(pg._pool.idleCount, idle - 1);
+                callback()
+            }, function (err) {
+                assert.equal(pg._pool.idleCount, idle);
+                done(err);
+            })
+        })
+
+        it('should wrap in transaction', function (done) {
+            pg.transaction(function (client, callback) {
+                pf.serial(
+                    client.update('item', {price: 42}).where('title', 'apple').run,
+                    // Check that change is not visible outside yet
+                    pf.waterfall(
+                        pg.select('price').from('item').where('title', 'apple').val,
+                        function (price, callback) {
+                            assert.equal(price, 10);
+                            callback()
+                        }
+                    ),
+                    // Return price back to not screw up remaining tests
+                    client.update('item', {price: 10}).where('title', 'apple').run
+                )(callback)
+            }, done)
+        })
+
+        it('should rollback on error', function (done) {
+            pg.transaction(function (client, callback) {
+                pf.serial(
+                    client.update('item', {price: 42}).where('title', 'apple').run,
+                    function (callback) { callback(new Error('Intended rollback')) },
+                )(callback)
+            }, function (err) {
+                assert.equal(err.message, 'Intended rollback')
+                pg.select('price').from('item').where('title', 'apple').val(
+                    function (err, price) {
+                        assert.equal(price, 10);
+                        done();
+                    })
+            })
+        })
+    })
+
     var usingNative = process.env.PGBRICKS_TEST_NATIVE || process.env.NODE_PG_FORCE_NATIVE;
     (usingNative ? describe.skip : describe)('Streaming', function () {
         it('should return EventEmitter', function (done) {
