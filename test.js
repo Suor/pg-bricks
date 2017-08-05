@@ -237,7 +237,7 @@ describe('pg-bricks', function () {
             pg.run(function (client, callback) {
                 var stream = client.raw('select no_col from item').stream();
                 stream.on('error', function (err) {
-                    assert.equal(err.routine, 'errorMissingColumn')
+                    assert.equal(err.message, 'column "no_col" does not exist')
                     callback()
                 })
                 stream.on('data', function () {
