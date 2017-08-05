@@ -155,6 +155,30 @@ describe('pg-bricks', function () {
                 }).catch(done);
             }, done)
         })
+
+        it('should error out', function (done) {
+            var stream = pg.raw('select no_col from item').stream();
+            stream.on('error', function (err) {
+                assert.equal(err.routine, 'errorMissingColumn')
+                done()
+            })
+            stream.on('data', function () {
+                throw Error('Unexpected data from broken query')
+            })
+        })
+
+        it('should error out from client', function (done) {
+            pg.run(function (client, callback) {
+                var stream = client.raw('select no_col from item').stream();
+                stream.on('error', function (err) {
+                    assert.equal(err.routine, 'errorMissingColumn')
+                    callback()
+                })
+                stream.on('data', function () {
+                    throw Error('Unexpected data from broken query')
+                })
+            }, done)
+        })
     })
 })
 
@@ -179,6 +203,5 @@ function slurp(stream) {
     return new Promise(function (resolve, reject) {
         stream.on('error', reject)
         stream.on('end', function () {resolve(store._store)})
-        // stream.on('finish', function () {resolve(store._store)})
     })
 }
