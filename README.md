@@ -18,19 +18,20 @@ You can use `select`, `insert`, `update` and `delete` constructors of [sql-brick
 construct your query by chaining their methods. You'll only need to finally call `.run()` or any data accessor to execute it:
 
 ```js
-var db = require('pg-bricks').configure(process.env.DATABASE_URL);
+const db = require('pg-bricks').configure(process.env.DATABASE_URL);
 
 // mind using db.sql to wrap now() function
-db.update('user', {last_login: db.sql('now()')}).where('id', id).run(callback);
+await db.update('user', {ll: db.sql('now()')}).where('id', id).run();
 
 // db.sql contains various utilities to construct where conditions
-db.delete('event').where(db.sql.lt('added', new Date('2005-01-01'))).run(...);
+db.delete('event').where(db.sql.lt('added', new Date('2005-01-01')))
+    .run().then(...);
 
-// .rows() access selected rows directly, not wrapped into result object
-db.select().from('user').where({name: userName}).rows(callback);
+// access selected rows directly, not wrapped into result object
+let users = await db.select().from('user').where({name: name}).rows()
 
-// .row() will pass newly created user to a callback
-db.insert('user', data).returning('*').row(callback);
+// all functions switch to callback style when one is passed
+db.insert('user', data).returning('*').row(function (err, user) {});
 ```
 
 As you can see, `db.sql` is a `sql-bricks` object, which you can use to escape raw sql
@@ -45,12 +46,36 @@ When you need to perform something custom you can resolve to raw sql queries:
 
 ```js
 // use .raw() for raw sql and .val() to get single value
-db.raw('select pg_datatable_size($1)', [tableName]).val(callback);
+let size = await db.raw('select pg_datatable_size($1)',
+                        [tableName]).val();
 ```
 
-## Promises
+## Configuration
 
-...
+You can supply either connection string or connection config to `.configure()`:
+
+```js
+const bricks = require('pg-bricks');
+const db1 = bricks.configure('postgresql://dbuser:pass@dbhost/mydb');
+const db2 = bricks.configure({
+    host: 'dbhost',
+    database: 'mydb2',
+    user: 'dbuser',
+    password: 'pass',
+});
+```
+
+Or you can use [environment variables](https://www.postgresql.org/docs/9.1/static/libpq-envars.html) which libpq to connect to a PostgreSQL server:
+
+```bash
+$ PGHOST=dbhost PGPORT=5433 \
+  PGDATABASE=mydb PGUSER=dbuser PGPASSWORD=pass \
+  node script.js
+```
+
+If you are using connection config it is passed directly to `node-postgres`,
+so you may take a look at its [Connecting](https://node-postgres.com/features/connecting)
+and [SSL/TLS](https://node-postgres.com/features/ssl) documentation pages.
 
 
 ## Connections and transactions
@@ -60,31 +85,23 @@ for you when you need it and returned to the pool once you are done.
 You can also manually get connection:
 
 ```js
-db.run(function (client, callback) {
+await db.run(async (client) => {
     // client is a node-postgres client object
     // it is however extended with sql-bricks query constructors
-    client.select().from('user').where('id', id).run(callback);
+    await client.select().from('user').where('id', id).run();
 
     // you also get .raw()
-    client.raw("select * from user where id = $1", [id]).run(callback);
-}, callback);
+    await client.raw("select * from user where id = $1", [id]).row()
+})
 ```
 
 You can easily wrap your connection in a transaction:
 
 ```js
-db.transaction(function (client, callback) {
-    async.waterfall([
-        // .run is a closure, so you can pass it to other function like this:
-        client.insert('user', {name: 'Mike'}).returning('id').run,
-        // res here is normal node-postgres result,
-        // use .val accessor to get id directly
-        function (res, callback) {
-            var id = res.rows[0].id;
-            client.insert('profile', {user_id: id, ...}).run(callback);
-        },
-    ], callback)
-}, callback)
+await db.transaction(async (client) => {
+    let id = await client.insert('user', ...).returning('id').val()
+    await client.insert('profile', {user_id: id, ...}).run()
+})
 ```
 
 
@@ -122,7 +139,6 @@ function (req, res) {
 }
 ```
 
-
 ## Debugging
 
 `pg-bricks` uses [debug][] package, so you can use:
@@ -154,10 +170,24 @@ NODE_PG_FORCE_NATIVE=1 node your_code.js
 Note that streaming won't work with native bindings.
 
 
-## TODO:
+## Callbacks
 
-- make queries with accessors capable of streaming?
+All execute methods such as `query.run()` and all the accessors automatically switch between promise and callback modes as on the examples above. `db.run()` and `db.transaction()` additionally switch their expectation of body function:
 
+```js
+db.transaction(function (client, callback) {
+    async.waterfall([
+        // .run is a closure, so you can pass it to other function like this:
+        client.insert('user', {name: 'Mike'}).returning('id').run,
+        // res here is normal node-postgres result,
+        // use .val accessor to get id directly
+        function (res, callback) {
+            var id = res.rows[0].id;
+            client.insert('profile', {user_id: id, ...}).run(callback);
+        },
+    ], callback)
+}, done)
+```
 
 [sql-bricks-postgres]: https://www.npmjs.org/package/sql-bricks-postgres
 [sql-bricks]: https://www.npmjs.org/package/sql-bricks
