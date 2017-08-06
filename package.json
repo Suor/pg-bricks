@@ -35,9 +35,11 @@
   "dependencies": {
     "debug": "~2.2.0",
     "pg": "^7.1",
-    "pg-query-stream": "^1.0.0",
     "point-free": "0.7.0",
     "sql-bricks-postgres": ">=0.3.0"
+  },
+  "optionalDependencies": {
+    "pg-query-stream": "^1.0.0"
   },
   "devDependencies": {
     "mocha": "^2.5.3"
