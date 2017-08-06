@@ -219,6 +219,10 @@ Conf.prototype = {
 
         return response.result;
     },
+
+    end: function (callback) {
+        return this._pool.end(callback);
+    }
 }
 // Add statement constructors to Conf object
 instrument(Conf.prototype);
