@@ -113,9 +113,8 @@ Also, `.row()` checks that result contains exactly one row and `.col()` checks t
 contains exactly one column. `.val()` does both:
 
 ```js
-db.select('id, name').from('user').val(function (err) {
-    // err is Error('Expected a single column, multiple found')
-})
+await db.select('id', 'name').from('user').val()
+// throws Error('Expected a single column, multiple found')
 ```
 
 
