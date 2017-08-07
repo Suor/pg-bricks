@@ -65,7 +65,7 @@ const db2 = bricks.configure({
 });
 ```
 
-Or you can use [environment variables](https://www.postgresql.org/docs/9.1/static/libpq-envars.html) which libpq to connect to a PostgreSQL server:
+Or you can use [environment variables](https://www.postgresql.org/docs/9.6/static/libpq-envars.html) same as libpq uses to connect to a PostgreSQL server:
 
 ```bash
 $ PGHOST=dbhost PGPORT=5433 \
