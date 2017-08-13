@@ -5,13 +5,6 @@ of [sql-bricks][] as an interface to construct queries
 and handles connections and transactions for you.
 
 
-## Installation
-
-```
-npm install pg-bricks
-```
-
-
 ## Usage
 
 You can use `select`, `insert`, `update` and `delete` constructors of [sql-bricks][] and
