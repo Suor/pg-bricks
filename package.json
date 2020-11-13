@@ -1,6 +1,6 @@
 {
   "name": "pg-bricks",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Higher level PostgreSQL client",
   "keywords": [
     "postgres",
@@ -33,8 +33,8 @@
     "test": "mocha"
   },
   "dependencies": {
-    "debug": "~2.2.0",
-    "pg": "^7.1",
+    "debug": "~4.2.0",
+    "pg": "^8.5",
     "point-free": "0.7.0",
     "sql-bricks-postgres": ">=0.3.0"
   },
